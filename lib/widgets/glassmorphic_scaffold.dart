@@ -31,7 +31,7 @@ class GlassmorphicScaffold extends StatelessWidget {
       body: Container(
         width: MediaQuery.sizeOf(context).width,
         height: MediaQuery.sizeOf(context).height,
-        decoration: AppTheme.backgroundGradient,
+        decoration: AppTheme.getBackgroundGradient(context),
         child: SafeArea(
           child: child,
         ),
@@ -48,7 +48,7 @@ class GlassmorphicContainer extends StatelessWidget {
   final double? height;
   final BorderRadius? borderRadius;
   final Color? backgroundColor;
-  final double opacity;
+  final double? opacity;
   final double blur;
   final Border? border;
   final bool useBlur;
@@ -62,7 +62,7 @@ class GlassmorphicContainer extends StatelessWidget {
     this.height,
     this.borderRadius,
     this.backgroundColor,
-    this.opacity = 0.1,
+    this.opacity,
     this.blur = 10.0,
     this.border,
     this.useBlur = false,
@@ -70,14 +70,21 @@ class GlassmorphicContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultColor = isDark ? Colors.white : Colors.black;
+    final defaultOpacity = isDark ? 0.1 : 0.05;
+    
     final container = Container(
       padding: padding,
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: (backgroundColor ?? Colors.white).withOpacity(opacity),
+        color: (backgroundColor ?? defaultColor).withOpacity(opacity ?? defaultOpacity),
         borderRadius: borderRadius ?? BorderRadius.circular(AppTheme.borderRadius),
-        border: border,
+        border: border ?? Border.all(
+          color: isDark ? AppTheme.borderColor : AppTheme.borderColorLight,
+          width: 1,
+        ),
       ),
       child: child,
     );
@@ -168,15 +175,22 @@ class GlassmorphicTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return GlassmorphicContainer(
       useBlur: false,
-      opacity: 0.15,
+      opacity: isDark ? 0.15 : 0.08,
+      backgroundColor: isDark ? Colors.white : Colors.black,
+      border: Border.all(
+        color: isDark ? AppTheme.borderColor : AppTheme.borderColorLight,
+        width: 1,
+      ),
       child: TextField(
         controller: controller,
         focusNode: focusNode,
-        style: style,
+        style: style ?? (isDark ? AppTheme.bodyStyle : AppTheme.bodyStyleLight),
         onSubmitted: onSubmitted,
-        decoration: AppTheme.glassmorphicInputDecoration.copyWith(
+        decoration: (isDark ? AppTheme.glassmorphicInputDecoration : AppTheme.glassmorphicInputDecorationLight).copyWith(
           hintText: hintText,
         ),
       ),

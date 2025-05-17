@@ -14,20 +14,26 @@ class TodoItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todo = ref.watch(todoItemProvider(todoId));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     if (todo == null) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Material(
-        color: Colors.white.withOpacity(0.15),
+        color: (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.15 : 0.05),
         borderRadius: BorderRadius.circular(AppTheme.borderRadius),
         child: ListTile(
           leading: CheckboxTheme(
             data: CheckboxThemeData(
               shape: const CircleBorder(),
-              side: AppTheme.checkboxBorderSide,
-              fillColor: AppTheme.checkboxFillColor,
+              side: isDark ? AppTheme.checkboxBorderSide : BorderSide(color: AppTheme.borderColorLight),
+              fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.selected)) {
+                  return isDark ? AppTheme.primaryGrey : AppTheme.primaryBlue;
+                }
+                return Colors.transparent;
+              }),
             ),
             child: Checkbox(
               value: todo.isDone,
@@ -38,12 +44,15 @@ class TodoItem extends ConsumerWidget {
           ),
           title: Text(
             todo.title,
-            style: AppTheme.bodyStyle.copyWith(
+            style: (isDark ? AppTheme.bodyStyle : AppTheme.bodyStyleLight).copyWith(
               decoration: todo.isDone ? TextDecoration.lineThrough : null,
             ),
           ),
           trailing: IconButton(
-            icon: const Icon(Icons.delete, color: AppTheme.white),
+            icon: Icon(
+              Icons.delete,
+              color: isDark ? AppTheme.white : AppTheme.textDark,
+            ),
             onPressed: () {
               ref.read(todoProvider.notifier).removeTodo(todoId);
             },

@@ -14,3 +14,14 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Environment Variables
+
+This project uses a `.env` file to store Supabase credentials (URL and anon key). **Do not commit your `.env` file to version control.**
+
+Add your Supabase credentials to `.env` like this:
+
+```
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
+```

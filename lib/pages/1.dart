@@ -4,6 +4,10 @@ import '../theme/app_theme.dart';
 import '../widgets/glassmorphic_scaffold.dart';
 import '../providers/todo_provider.dart';
 import '../widgets/todo_item.dart';
+import '../widgets/theme_toggle_button.dart';
+import '../services/hive_service.dart';
+import '../widgets/shimmer_task_list.dart';
+import '../services/sync_service.dart';
 
 class FirstPage extends ConsumerStatefulWidget {
   const FirstPage({super.key});
@@ -18,21 +22,22 @@ class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveCl
   final ScrollController _scrollController = ScrollController();
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    _textFieldFocusNode.dispose();
-    _scrollController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SyncService.listenToConnectivity(ref);
+      if (HiveService.getIsFirstLaunch()) {
+        SyncService.checkFirstLaunchAndSync(ref);
+      } else {
+        SyncService.syncUpdatedTasks(ref);
+      }
+    });
   }
 
   void _handleAddTodo(String value) {
     if (value.isNotEmpty) {
       ref.read(todoProvider.notifier).addTodo(value);
       _textController.clear();
-      // Scroll to bottom after adding new todo
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -48,8 +53,10 @@ class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveCl
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // Watch the todos list instead of the raw map
-    final todosLength = ref.watch(todosListProvider).length;
+
+    final todos = ref.watch(todosListProvider);
+    final isHiveEmpty = todos.isEmpty;
+    final isLoading = ref.watch(syncStateProvider);
 
     return GestureDetector(
       onTap: () {
@@ -58,6 +65,15 @@ class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveCl
       },
       child: GlassmorphicScaffold(
         extendBody: true,
+        appBar: AppBar(
+          title: Text('Todo List', style: Theme.of(context).textTheme.headlineMedium),
+          actions: const [
+            ThemeToggleButton(),
+            SizedBox(width: 8),
+          ],
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
         child: Column(
           children: [
             Padding(
@@ -85,31 +101,42 @@ class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveCl
                 ],
               ),
             ),
+            AnimatedOpacity(
+              opacity: isLoading && !isHiveEmpty ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              child: isLoading && !isHiveEmpty
+                  ? const LinearProgressIndicator(
+                      minHeight: 2,
+                      backgroundColor: Color(0x11000000),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             Expanded(
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    final todos = ref.watch(todosListProvider);
-                    return ListView.builder(
-                      controller: _scrollController,
-                      padding: AppTheme.defaultPadding,
-                      itemCount: todos.length,
-                      itemBuilder: (context, index) {
-                        final todo = todos[index];
-                        return TodoItem(
-                          key: ValueKey(todo.id),
-                          todoId: todo.id,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
+              child: isLoading && isHiveEmpty
+                  ? const ShimmerTaskList()
+                  : ScrollConfiguration(
+                      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: AppTheme.defaultPadding,
+                        itemCount: todos.length,
+                        itemBuilder: (context, index) {
+                          final todo = todos[index];
+                          return TodoItem(
+                            key: ValueKey(todo.id),
+                            todoId: todo.id,
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

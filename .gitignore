@@ -3,6 +3,18 @@
 *.log
 *.pyc
 *.swp
+*.swo
+*.bak
+*.old
+*.orig
+*.save
+*.sublime-workspace
+*.sublime-project
+*.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
 .DS_Store
 .atom/
 .build/
@@ -43,3 +55,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Add .env to ignore list
+.env
