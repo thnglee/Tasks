@@ -5,9 +5,8 @@ import '../widgets/glassmorphic_scaffold.dart';
 import '../providers/todo_provider.dart';
 import '../widgets/todo_item.dart';
 import '../widgets/theme_toggle_button.dart';
-import '../services/hive_service.dart';
 import '../widgets/shimmer_task_list.dart';
-import '../services/sync_service.dart';
+import '../services/sync_service.dart' show syncStateProvider;
 
 class FirstPage extends ConsumerStatefulWidget {
   const FirstPage({super.key});
@@ -16,38 +15,38 @@ class FirstPage extends ConsumerStatefulWidget {
   ConsumerState<FirstPage> createState() => _FirstPageState();
 }
 
-class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveClientMixin {
+class _FirstPageState extends ConsumerState<FirstPage>
+    with AutomaticKeepAliveClientMixin {
   final TextEditingController _textController = TextEditingController();
   final FocusNode _textFieldFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SyncService.listenToConnectivity(ref);
-      if (HiveService.getIsFirstLaunch()) {
-        SyncService.checkFirstLaunchAndSync(ref);
-      } else {
-        SyncService.syncUpdatedTasks(ref);
-      }
-    });
+  void dispose() {
+    _textController.dispose();
+    _textFieldFocusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _handleAddTodo(String value) {
     if (value.isNotEmpty) {
       ref.read(todoProvider.notifier).addTodo(value);
       _textController.clear();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+      _scrollToTop();
     }
+  }
+
+  void _scrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -66,11 +65,11 @@ class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveCl
       child: GlassmorphicScaffold(
         extendBody: true,
         appBar: AppBar(
-          title: Text('Todo List', style: Theme.of(context).textTheme.headlineMedium),
-          actions: const [
-            ThemeToggleButton(),
-            SizedBox(width: 8),
-          ],
+          title: Text(
+            'Todo List',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          actions: const [ThemeToggleButton(), SizedBox(width: 8)],
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -105,31 +104,35 @@ class _FirstPageState extends ConsumerState<FirstPage> with AutomaticKeepAliveCl
               opacity: isLoading && !isHiveEmpty ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeInOut,
-              child: isLoading && !isHiveEmpty
-                  ? const LinearProgressIndicator(
-                      minHeight: 2,
-                      backgroundColor: Color(0x11000000),
-                    )
-                  : const SizedBox.shrink(),
+              child:
+                  isLoading && !isHiveEmpty
+                      ? const LinearProgressIndicator(
+                        minHeight: 2,
+                        backgroundColor: Color(0x11000000),
+                      )
+                      : const SizedBox.shrink(),
             ),
             Expanded(
-              child: isLoading && isHiveEmpty
-                  ? const ShimmerTaskList()
-                  : ScrollConfiguration(
-                      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: AppTheme.defaultPadding,
-                        itemCount: todos.length,
-                        itemBuilder: (context, index) {
-                          final todo = todos[index];
-                          return TodoItem(
-                            key: ValueKey(todo.id),
-                            todoId: todo.id,
-                          );
-                        },
+              child:
+                  isLoading && isHiveEmpty
+                      ? const ShimmerTaskList()
+                      : ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(
+                          context,
+                        ).copyWith(scrollbars: false),
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: AppTheme.defaultPadding,
+                          itemCount: todos.length,
+                          itemBuilder: (context, index) {
+                            final todo = todos[index];
+                            return TodoItem(
+                              key: ValueKey(todo.id),
+                              todoId: todo.id,
+                            );
+                          },
+                        ),
                       ),
-                    ),
             ),
           ],
         ),

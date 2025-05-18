@@ -10,6 +10,34 @@ class TodoNotifier extends Notifier<Map<String, Todo>> {
   Map<String, Todo> build() {
     // Load initial todos from Hive
     final todos = HiveService.getAllTodos();
+    // Start listening to Supabase realtime
+    SupabaseService.listenToTasksTable(
+      onInsert: (data) {
+        print('[Realtime] Insert event received: $data');
+        final todo = Todo.fromMap(data);
+        HiveService.addTodo(todo).then((_) {
+          state = Map.from(state)..[todo.id] = todo;
+        });
+      },
+      onUpdate: (data) {
+        print('[Realtime] Update event received: $data');
+        final todo = Todo.fromMap(data);
+        HiveService.updateTodo(todo).then((_) {
+          state = Map.from(state)..[todo.id] = todo;
+        });
+      },
+      onDelete: (data) {
+        print('[Realtime] Delete event received: $data');
+        final id = data['id']?.toString();
+        if (id != null) {
+          HiveService.deleteTodo(id).then((_) {
+            final newState = Map<String, Todo>.from(state);
+            newState.remove(id);
+            state = newState;
+          });
+        }
+      },
+    );
     return {for (var todo in todos) todo.id: todo};
   }
 
@@ -25,7 +53,17 @@ class TodoNotifier extends Notifier<Map<String, Todo>> {
       deleted: false,
     );
     await HiveService.addTodo(newTodo);
-    state = Map.from(state)..[id] = newTodo;
+    // Insert new todo and re-sort by createdAt descending
+    final todos = [newTodo, ...state.values];
+    todos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = {for (var todo in todos) todo.id: todo};
+
+    // Debug log: print all createdAt values
+    final createdAts = todos
+        .map((t) => '[${t.title}] ${t.createdAt.toIso8601String()}')
+        .join(', ');
+    // ignore: avoid_print
+    print('DEBUG: Todos order after add: $createdAts');
 
     final connectivity = await Connectivity().checkConnectivity();
     final isOnline = connectivity != ConnectivityResult.none;
@@ -82,7 +120,9 @@ class TodoNotifier extends Notifier<Map<String, Todo>> {
       state.values.where((todo) => !todo.deleted).toList();
 }
 
-final todoProvider = NotifierProvider<TodoNotifier, Map<String, Todo>>(TodoNotifier.new);
+final todoProvider = NotifierProvider<TodoNotifier, Map<String, Todo>>(
+  TodoNotifier.new,
+);
 
 // Individual todo item provider for more granular updates
 final todoItemProvider = Provider.family<Todo?, String>((ref, id) {
@@ -91,5 +131,8 @@ final todoItemProvider = Provider.family<Todo?, String>((ref, id) {
 
 // Provider for the todos list
 final todosListProvider = Provider<List<Todo>>((ref) {
-  return ref.watch(todoProvider).values.where((todo) => !todo.deleted).toList();
-}); 
+  final todos =
+      ref.watch(todoProvider).values.where((todo) => !todo.deleted).toList();
+  todos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return todos;
+});
