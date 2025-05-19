@@ -73,9 +73,7 @@ class SupabaseService {
           schema: 'public',
           table: 'tasks',
           callback: (payload) {
-            if (payload.newRecord != null) {
-              onInsert(payload.newRecord!);
-            }
+            onInsert(payload.newRecord);
           },
         )
         .onPostgresChanges(
@@ -83,9 +81,7 @@ class SupabaseService {
           schema: 'public',
           table: 'tasks',
           callback: (payload) {
-            if (payload.newRecord != null) {
-              onUpdate(payload.newRecord!);
-            }
+            onUpdate(payload.newRecord);
           },
         )
         .onPostgresChanges(
@@ -93,9 +89,7 @@ class SupabaseService {
           schema: 'public',
           table: 'tasks',
           callback: (payload) {
-            if (payload.oldRecord != null) {
-              onDelete(payload.oldRecord!);
-            }
+            onDelete(payload.oldRecord);
           },
         );
     _tasksChannel!.subscribe();

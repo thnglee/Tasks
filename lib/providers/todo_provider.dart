@@ -16,14 +16,22 @@ class TodoNotifier extends Notifier<Map<String, Todo>> {
         print('[Realtime] Insert event received: $data');
         final todo = Todo.fromMap(data);
         HiveService.addTodo(todo).then((_) {
-          state = Map.from(state)..[todo.id] = todo;
+          final updated = Map<String, Todo>.from(state)..[todo.id] = todo;
+          final sorted =
+              updated.values.toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          state = {for (var t in sorted) t.id: t};
         });
       },
       onUpdate: (data) {
         print('[Realtime] Update event received: $data');
         final todo = Todo.fromMap(data);
         HiveService.updateTodo(todo).then((_) {
-          state = Map.from(state)..[todo.id] = todo;
+          final updated = Map<String, Todo>.from(state)..[todo.id] = todo;
+          final sorted =
+              updated.values.toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          state = {for (var t in sorted) t.id: t};
         });
       },
       onDelete: (data) {

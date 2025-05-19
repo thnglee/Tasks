@@ -88,10 +88,11 @@ class SyncService {
           case 'update':
           case 'delete':
             success = await SupabaseService.updateTaskInSupabase(task);
-            if (success)
+            if (success) {
               LogService.database(
                 '${action.toUpperCase()}: task ${task['id']}',
               );
+            }
             break;
         }
 
