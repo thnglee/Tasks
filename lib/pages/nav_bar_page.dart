@@ -14,11 +14,17 @@ class NavBarPage extends StatefulWidget {
   State<NavBarPage> createState() => NavBarPageState();
 }
 
-class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMixin {
+class NavBarPageState extends State<NavBarPage> {
   String _currentPageName = 'FirstPage';
-  late final AnimationController _animationController;
-  late final Animation<double> _fadeAnimation;
-  
+  late final PageController _pageController = PageController(
+    initialPage: [
+      'FirstPage',
+      'SecondPage',
+      'ThirdPage',
+      'FourthPage',
+    ].indexOf(widget.initialPage ?? 'FirstPage'),
+  );
+
   final List<Widget> _pages = const [
     FirstPage(),
     SecondPage(),
@@ -30,52 +36,49 @@ class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMi
   void initState() {
     super.initState();
     _currentPageName = widget.initialPage ?? _currentPageName;
-    
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   void _handlePageChange(int index) {
-    final newPageName = ['FirstPage', 'SecondPage', 'ThirdPage', 'FourthPage'][index];
+    final newPageName =
+        ['FirstPage', 'SecondPage', 'ThirdPage', 'FourthPage'][index];
     if (newPageName != _currentPageName) {
       setState(() {
         _currentPageName = newPageName;
       });
-      _animationController.reset();
-      _animationController.forward();
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = ['FirstPage', 'SecondPage', 'ThirdPage', 'FourthPage']
-        .indexOf(_currentPageName);
+    final currentIndex = [
+      'FirstPage',
+      'SecondPage',
+      'ThirdPage',
+      'FourthPage',
+    ].indexOf(_currentPageName);
 
     return Scaffold(
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: IndexedStack(
-          index: currentIndex,
-          children: _pages,
-        ),
+      body: PageView(
+        controller: _pageController,
+        physics: const PageScrollPhysics(),
+        onPageChanged: (index) {
+          setState(() {
+            _currentPageName =
+                ['FirstPage', 'SecondPage', 'ThirdPage', 'FourthPage'][index];
+          });
+        },
+        children: _pages,
       ),
       extendBody: true,
       bottomNavigationBar: FloatingNavbar(
@@ -98,7 +101,10 @@ class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMi
               children: [
                 Icon(
                   Icons.home_rounded,
-                  color: currentIndex == 0 ? Colors.white : const Color(0x4857636C),
+                  color:
+                      currentIndex == 0
+                          ? Colors.white
+                          : const Color(0x4857636C),
                   size: 24.0,
                 ),
               ],
@@ -110,7 +116,10 @@ class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMi
               children: [
                 Icon(
                   Icons.history,
-                  color: currentIndex == 1 ? Colors.white : const Color(0x4857636C),
+                  color:
+                      currentIndex == 1
+                          ? Colors.white
+                          : const Color(0x4857636C),
                   size: 24.0,
                 ),
               ],
@@ -122,7 +131,10 @@ class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMi
               children: [
                 Icon(
                   Icons.settings,
-                  color: currentIndex == 2 ? Colors.white : const Color(0x4857636C),
+                  color:
+                      currentIndex == 2
+                          ? Colors.white
+                          : const Color(0x4857636C),
                   size: 24.0,
                 ),
               ],
@@ -134,7 +146,10 @@ class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMi
               children: [
                 Icon(
                   Icons.person,
-                  color: currentIndex == 3 ? Colors.white : const Color(0x4857636C),
+                  color:
+                      currentIndex == 3
+                          ? Colors.white
+                          : const Color(0x4857636C),
                   size: 24.0,
                 ),
               ],
@@ -144,4 +159,4 @@ class NavBarPageState extends State<NavBarPage> with SingleTickerProviderStateMi
       ),
     );
   }
-} 
+}
