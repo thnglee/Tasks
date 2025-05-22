@@ -15,54 +15,46 @@ class CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate the width of each nav item section
-    final navWidth =
-        MediaQuery.of(context).size.width - 48.0; // Total width minus padding
-    final itemWidth = navWidth / 4; // Divide by number of items
-
     return Container(
       color: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
-        child: Material(
-          elevation: isDark ? 0 : 8,
-          borderRadius: BorderRadius.circular(24),
-          color: Colors.transparent,
-          child: Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.surfaceLight,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Stack(
-              children: [
-                // Animated Selection Indicator
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  left: currentIndex * itemWidth + (itemWidth - 48) / 2,
-                  top: 8.0,
-                  child: Container(
-                    width: 48,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkSurface : AppTheme.surfaceLight,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    isDark
+                        ? Colors.white.withOpacity(0.15)
+                        : Colors.black.withOpacity(0.25),
+                offset: const Offset(
+                  0,
+                  0,
+                ), // Shadow position: right under the nav bar
+                blurRadius: 8,
+                spreadRadius: 0, // Keeps the glow concentrated
+              ),
+              // Additional inner glow for dark mode
+              if (isDark)
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.05),
+                  offset: const Offset(0, 2),
+                  blurRadius: 4,
+                  spreadRadius: 0,
                 ),
-                // Nav Items
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildNavItem(Icons.home_rounded, 0),
-                    _buildNavItem(Icons.history_rounded, 1),
-                    _buildNavItem(Icons.settings_rounded, 2),
-                    _buildNavItem(Icons.person_rounded, 3),
-                  ],
-                ),
-              ],
-            ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavItem(Icons.home_rounded, 0),
+              _buildNavItem(Icons.history_rounded, 1),
+              _buildNavItem(Icons.settings_rounded, 2),
+              _buildNavItem(Icons.person_rounded, 3),
+            ],
           ),
         ),
       ),
@@ -79,6 +71,13 @@ class CustomNavBar extends StatelessWidget {
         width: 48,
         height: 32,
         margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration:
+            isSelected
+                ? BoxDecoration(
+                  color: AppTheme.primaryPurple,
+                  borderRadius: BorderRadius.circular(16),
+                )
+                : null,
         child: Icon(
           icon,
           color:

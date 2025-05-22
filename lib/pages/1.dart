@@ -66,27 +66,20 @@ class _FirstPageState extends ConsumerState<FirstPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.only(
+                left: 24.0,
+                right: 24.0,
+                top: 12.0,
+                bottom: 24.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Tasks',
+                    'DamnTasks',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color:
-                          isDark ? AppTheme.darkSurface : AppTheme.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border:
-                          isDark
-                              ? null
-                              : Border.all(color: AppTheme.borderLight),
-                    ),
-                    child: const ThemeToggleButton(),
-                  ),
+                  const ThemeToggleButton(),
                 ],
               ),
             ),
@@ -98,6 +91,17 @@ class _FirstPageState extends ConsumerState<FirstPage>
                     topLeft: Radius.circular(32),
                     topRight: Radius.circular(32),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          isDark
+                              ? Colors.white.withOpacity(0.2)
+                              : Colors.black.withOpacity(0.2),
+                      offset: const Offset(0, 0),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -106,7 +110,7 @@ class _FirstPageState extends ConsumerState<FirstPage>
                         left: 24.0,
                         right: 24.0,
                         top: 24.0,
-                        bottom: 8.0,
+                        bottom: 10.0,
                       ),
                       child: Container(
                         decoration: BoxDecoration(
@@ -176,16 +180,13 @@ class _FirstPageState extends ConsumerState<FirstPage>
                                 : const Color(0x11FFFFFF),
                       ),
                     Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 80),
-                        child:
-                            isLoading && isHiveEmpty
-                                ? const ShimmerTaskList()
-                                : AnimatedTodoList(
-                                  todos: todos,
-                                  scrollController: _scrollController,
-                                ),
-                      ),
+                      child:
+                          isLoading && isHiveEmpty
+                              ? const ShimmerTaskList()
+                              : AnimatedTodoList(
+                                todos: todos,
+                                scrollController: _scrollController,
+                              ),
                     ),
                   ],
                 ),

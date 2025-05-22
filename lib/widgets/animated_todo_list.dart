@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../todo_model.dart';
-import '../theme/app_theme.dart';
 import 'todo_item.dart';
 
 class AnimatedTodoList extends StatefulWidget {
