@@ -2,6 +2,24 @@
 
 A modern, feature-rich Todo application built with Flutter and Supabase. This app demonstrates best practices in Flutter development, including offline-first architecture, cloud synchronization, and a clean, maintainable codebase.
 
+## 📱 Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/bdfba7d1-0d5d-4529-affe-9ff9def0eb4e" alt="iPhone Screenshot" width="300"/><br/>
+      <sub>📱 iPhone</sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/1d8d6638-8849-46c0-9ecd-3af5910b2dc4" alt="iPad Screenshot" width="500"/><br/>
+      <sub>💻 iPad</sub>
+    </td>
+  </tr>
+</table>
+
+
+---
+
 ## Features
 
 - ✨ Clean and intuitive user interface
