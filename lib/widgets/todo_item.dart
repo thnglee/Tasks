@@ -6,59 +6,92 @@ import '../providers/todo_provider.dart';
 class TodoItem extends ConsumerWidget {
   final String todoId;
 
-  const TodoItem({
-    super.key,
-    required this.todoId,
-  });
+  const TodoItem({super.key, required this.todoId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todo = ref.watch(todoItemProvider(todoId));
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     if (todo == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Material(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.15 : 0.05),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        child: ListTile(
-          leading: CheckboxTheme(
-            data: CheckboxThemeData(
-              shape: const CircleBorder(),
-              side: isDark ? AppTheme.checkboxBorderSide : BorderSide(color: AppTheme.borderColorLight),
-              fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
-                if (states.contains(WidgetState.selected)) {
-                  return isDark ? AppTheme.primaryGrey : AppTheme.primaryBlue;
-                }
-                return Colors.transparent;
-              }),
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Container(
+        decoration:
+            isDark
+                ? AppTheme.taskItemDecoration
+                : AppTheme.taskItemDecorationLight,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => ref.read(todoProvider.notifier).toggleTodo(todoId),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.primaryPurple.withOpacity(0.5),
+                          width: 2,
+                        ),
+                        color:
+                            todo.isDone
+                                ? AppTheme.primaryPurple
+                                : Colors.transparent,
+                      ),
+                      child:
+                          todo.isDone
+                              ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              )
+                              : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        todo.title,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          decoration:
+                              todo.isDone ? TextDecoration.lineThrough : null,
+                          color:
+                              todo.isDone
+                                  ? (isDark
+                                          ? AppTheme.textLight
+                                          : AppTheme.textDark)
+                                      .withOpacity(0.5)
+                                  : (isDark
+                                      ? AppTheme.textLight
+                                      : AppTheme.textDark),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: (isDark ? AppTheme.textLight : AppTheme.textDark)
+                            .withOpacity(0.5),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        ref.read(todoProvider.notifier).removeTodo(todoId);
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-            child: Checkbox(
-              value: todo.isDone,
-              onChanged: (bool? _) {
-                ref.read(todoProvider.notifier).toggleTodo(todoId);
-              },
-            ),
-          ),
-          title: Text(
-            todo.title,
-            style: (isDark ? AppTheme.bodyStyle : AppTheme.bodyStyleLight).copyWith(
-              decoration: todo.isDone ? TextDecoration.lineThrough : null,
-            ),
-          ),
-          trailing: IconButton(
-            icon: Icon(
-              Icons.delete,
-              color: isDark ? AppTheme.white : AppTheme.textDark,
-            ),
-            onPressed: () {
-              ref.read(todoProvider.notifier).removeTodo(todoId);
-            },
           ),
         ),
       ),
     );
   }
-} 
+}

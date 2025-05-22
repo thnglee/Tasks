@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
-import '../widgets/glassmorphic_scaffold.dart';
 import '../providers/todo_provider.dart';
-import '../widgets/todo_item.dart';
-import '../widgets/theme_toggle_button.dart';
 import '../widgets/shimmer_task_list.dart';
+import '../widgets/animated_todo_list.dart';
+import '../widgets/theme_toggle_button.dart';
 import '../services/sync_service.dart' show syncStateProvider;
 
 class FirstPage extends ConsumerStatefulWidget {
@@ -56,83 +55,141 @@ class _FirstPageState extends ConsumerState<FirstPage>
     final todos = ref.watch(todosListProvider);
     final isHiveEmpty = todos.isEmpty;
     final isLoading = ref.watch(syncStateProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: GlassmorphicScaffold(
-        extendBody: true,
-        appBar: AppBar(
-          title: Text(
-            'Todo List',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          actions: const [ThemeToggleButton(), SizedBox(width: 8)],
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
+    return Scaffold(
+      backgroundColor:
+          isDark ? AppTheme.darkBackground : AppTheme.backgroundLight,
+      body: SafeArea(
+        bottom: false,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: AppTheme.defaultPadding,
+              padding: const EdgeInsets.all(24.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: GlassmorphicTextField(
-                      controller: _textController,
-                      focusNode: _textFieldFocusNode,
-                      hintText: 'Add a new task',
-                      style: AppTheme.bodyStyle,
-                      onSubmitted: _handleAddTodo,
-                    ),
+                  Text(
+                    'Tasks',
+                    style: Theme.of(context).textTheme.headlineLarge,
                   ),
-                  const SizedBox(width: 10),
-                  GlassmorphicButton(
-                    onPressed: () => _handleAddTodo(_textController.text),
-                    child: const Icon(
-                      Icons.add,
-                      color: AppTheme.white,
-                      size: AppTheme.defaultIconSize,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          isDark ? AppTheme.darkSurface : AppTheme.surfaceLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border:
+                          isDark
+                              ? null
+                              : Border.all(color: AppTheme.borderLight),
                     ),
+                    child: const ThemeToggleButton(),
                   ),
                 ],
               ),
             ),
-            AnimatedOpacity(
-              opacity: isLoading && !isHiveEmpty ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
-              child:
-                  isLoading && !isHiveEmpty
-                      ? const LinearProgressIndicator(
-                        minHeight: 2,
-                        backgroundColor: Color(0x11000000),
-                      )
-                      : const SizedBox.shrink(),
-            ),
             Expanded(
-              child:
-                  isLoading && isHiveEmpty
-                      ? const ShimmerTaskList()
-                      : ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(
-                          context,
-                        ).copyWith(scrollbars: false),
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: AppTheme.defaultPadding,
-                          itemCount: todos.length,
-                          itemBuilder: (context, index) {
-                            final todo = todos[index];
-                            return TodoItem(
-                              key: ValueKey(todo.id),
-                              todoId: todo.id,
-                            );
-                          },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkSurface : AppTheme.surfaceLight,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 24.0,
+                        right: 24.0,
+                        top: 24.0,
+                        bottom: 8.0,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              isDark
+                                  ? AppTheme.darkBackground
+                                  : AppTheme.backgroundLight,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color:
+                                isDark
+                                    ? AppTheme.darkBorder
+                                    : AppTheme.borderLight,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                focusNode: _textFieldFocusNode,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                                decoration: InputDecoration(
+                                  hintText: 'Add a new task',
+                                  hintStyle: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.copyWith(
+                                    color: (isDark
+                                            ? AppTheme.textLight
+                                            : AppTheme.textDark)
+                                        .withOpacity(0.5),
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                ),
+                                onSubmitted: _handleAddTodo,
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryPurple,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                ),
+                                onPressed:
+                                    () => _handleAddTodo(_textController.text),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
+                    if (isLoading && !isHiveEmpty)
+                      LinearProgressIndicator(
+                        minHeight: 2,
+                        backgroundColor:
+                            isDark
+                                ? const Color(0x11000000)
+                                : const Color(0x11FFFFFF),
+                      ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 80),
+                        child:
+                            isLoading && isHiveEmpty
+                                ? const ShimmerTaskList()
+                                : AnimatedTodoList(
+                                  todos: todos,
+                                  scrollController: _scrollController,
+                                ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

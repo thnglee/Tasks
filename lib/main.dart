@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'pages/nav_bar_page.dart';
+import 'pages/main_layout.dart';
 import 'theme/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'services/app_service.dart';
@@ -41,7 +41,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      home: const NavBarPage(),
+      home: const MainLayout(),
     );
   }
 }
